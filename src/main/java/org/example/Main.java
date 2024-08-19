@@ -1,9 +1,9 @@
 package org.example;
 
-import org.example.client.Client;
-import org.example.injector.Injector;
-import org.example.service.Service;
-import org.example.service.ServiceImpl;
+import org.example.app.client.Client;
+import org.example.framework.Injector;
+import org.example.app.service.Service;
+import org.example.app.service.ServiceImpl;
 
 public class Main {
     public static void main(String[] args) {

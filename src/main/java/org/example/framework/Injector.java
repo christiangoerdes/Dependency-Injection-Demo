@@ -1,4 +1,4 @@
-package org.example.injector;
+package org.example.framework;
 
 import java.util.HashMap;
 import java.util.Map;

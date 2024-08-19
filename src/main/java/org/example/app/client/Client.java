@@ -1,6 +1,6 @@
-package org.example.client;
+package org.example.app.client;
 
-import org.example.service.Service;
+import org.example.app.service.Service;
 
 public class Client {
 
