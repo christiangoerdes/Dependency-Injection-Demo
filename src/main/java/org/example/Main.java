@@ -8,10 +8,11 @@ public class Main {
         Injector injector = new Injector();
 
         // Resolve dependencies and create a Client instance
-        Client client = injector.resolve(Client.class);
+        Client client1 = injector.resolve(Client.class);
+        Client client2 = injector.resolve(Client.class);
 
         // Use the client
-        client.doSomething();
-
+        client1.doSomething();
+        client2.doSomething();
     }
 }
