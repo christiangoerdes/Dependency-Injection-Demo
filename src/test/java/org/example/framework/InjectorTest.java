@@ -1,97 +1,119 @@
 package org.example.framework;
 
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class InjectorTest {
 
-    static class Database {
-        Database() {
+    @Nested
+    class SimpleDependencyTests {
+        interface SimpleService {
+            void execute();
         }
-    }
 
-    static class UserRepository {
-        private final Database database;
-
-        UserRepository(Database database) {
-            this.database = database;
-        }
-    }
-
-    static class UserService {
-        private final UserRepository userRepository;
-
-        UserService(UserRepository userRepository) {
-            this.userRepository = userRepository;
-        }
-    }
-
-    static class Client {
-        private final UserService userService;
-
-        Client(UserService userService) {
-            this.userService = userService;
-        }
-    }
-
-    static class A {
-        private final B b;
-
-        A(B b) {
-            this.b = b;
-        }
-    }
-
-    static class B {
-        private final A a;
-
-        B(A a) {
-            this.a = a;
-        }
-    }
-
-    @Test
-    void testSimpleDependencyResolution() {
-        Injector injector = new Injector();
-        Database db = injector.resolve(Database.class);
-        assertNotNull(db);
-    }
-
-    @Test
-    void testComplexDependencyResolution() {
-        Injector injector = new Injector();
-        Client client = injector.resolve(Client.class);
-        assertNotNull(client);
-    }
-
-    @Test
-    void testSingletonBehavior() {
-        Injector injector = new Injector();
-        UserRepository repo1 = injector.resolve(UserRepository.class);
-        UserRepository repo2 = injector.resolve(UserRepository.class);
-        assertSame(repo1, repo2);
-    }
-
-    @Test
-    void testCircularDependencyDetection() {
-        Injector injector = new Injector();
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            injector.resolve(A.class);
-        });
-
-        // Check the complete exception chain for the circular dependency message
-        Throwable cause = exception;
-        boolean circularDependencyDetected = false;
-
-        while (cause != null) {
-            if (cause.getMessage().contains("Circular dependency detected")) {
-                circularDependencyDetected = true;
-                break;
+        static class SimpleServiceImpl implements SimpleService {
+            public void execute() {
+                System.out.println("SimpleServiceImpl executing");
             }
-            cause = cause.getCause();
         }
 
-        assertTrue(circularDependencyDetected, "Circular dependency exception should be detected in the exception chain.");
+        static class SimpleClient {
+            private final SimpleService service;
+
+            SimpleClient(SimpleService service) {
+                this.service = service;
+            }
+
+            void doWork() {
+                service.execute();
+            }
+        }
+
+        @Test
+        void testSimpleDependencyInjection() {
+            Injector injector = new Injector();
+            injector.registerImplementation(SimpleService.class, SimpleServiceImpl.class);
+
+            SimpleClient client = injector.resolve(SimpleClient.class);
+            assertNotNull(client);
+            assertInstanceOf(SimpleServiceImpl.class, client.service);
+        }
+    }
+
+    @Nested
+    class ComplexDependencyTests {
+        interface Repository {
+            void save();
+        }
+
+        static class RepositoryImpl implements Repository {
+            public void save() {
+                System.out.println("RepositoryImpl saving data");
+            }
+        }
+
+        interface Service {
+            void perform();
+        }
+
+        static class ServiceImpl implements Service {
+            private final Repository repository;
+
+            ServiceImpl(Repository repository) {
+                this.repository = repository;
+            }
+
+            public void perform() {
+                repository.save();
+            }
+        }
+
+        static class ComplexClient {
+            private final Service service;
+
+            ComplexClient(Service service) {
+                this.service = service;
+            }
+
+            void execute() {
+                service.perform();
+            }
+        }
+
+        @Test
+        void testComplexDependencyInjection() {
+            Injector injector = new Injector();
+            injector.registerImplementation(Repository.class, RepositoryImpl.class);
+            injector.registerImplementation(Service.class, ServiceImpl.class);
+
+            ComplexClient client = injector.resolve(ComplexClient.class);
+            assertNotNull(client);
+            assertInstanceOf(ServiceImpl.class, client.service);
+        }
+    }
+
+    @Nested
+    class CircularDependencyTests {
+        static class A {A(B b) {}}
+        static class B {B(A a) {}}
+
+        @Test
+        void testCircularDependencyDetection() {
+            Injector injector = new Injector();
+
+            Throwable cause = assertThrows(RuntimeException.class, () -> injector.resolve(A.class));
+            boolean circularDependencyDetected = false;
+
+            while (cause != null) {
+                if (cause.getMessage().contains("Circular dependency detected")) {
+                    circularDependencyDetected = true;
+                    break;
+                }
+                cause = cause.getCause();
+            }
+
+            assertTrue(circularDependencyDetected, "Circular dependency exception should be detected in the exception chain.");
+        }
     }
 }

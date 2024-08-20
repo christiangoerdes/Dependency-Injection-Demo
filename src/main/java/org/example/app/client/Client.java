@@ -1,13 +1,13 @@
 package org.example.app.client;
 
-import org.example.app.service.ServiceImpl1;
+import org.example.app.service.Service;
 
 public class Client {
 
-    private final ServiceImpl1 service;
+    private final org.example.app.service.Service service;
 
     // Dependency Injection via Constructor
-    public Client(ServiceImpl1 service) {
+    public Client(Service service) {
         this.service = service;
     }
 

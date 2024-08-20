@@ -9,6 +9,7 @@ import java.util.Set;
 public class Injector {
 
     private final Map<Class<?>, Object> instances = new HashMap<>();
+    private final Map<Class<?>, Class<?>> interfaceImplementations = new HashMap<>();
     private final Set<Class<?>> currentlyResolving = new HashSet<>();
 
     // Registers a class with its instance
@@ -16,11 +17,22 @@ public class Injector {
         instances.put(interfaceType, instance);
     }
 
+    public <T, U extends T> void registerImplementation(Class<T> abstractType, Class<U> concreteType) {
+        interfaceImplementations.put(abstractType, concreteType);
+    }
+
     // Resolves dependencies and returns an instance of the requested type
     public <T> T resolve(Class<T> interfaceType) {
         // Check if an instance is already registered
         if (instances.containsKey(interfaceType)) {
             return interfaceType.cast(instances.get(interfaceType));
+        }
+
+        // Check for a registered implementation
+        Class<?> implementationType = interfaceImplementations.get(interfaceType);
+        if (implementationType != null) {
+            //noinspection unchecked
+            return (T) resolve(implementationType);
         }
 
         // Check for circular dependencies
