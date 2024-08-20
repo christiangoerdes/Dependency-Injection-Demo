@@ -1,7 +1,5 @@
 package org.example.app.repo;
 
-import org.example.app.service.ServiceImpl1;
-
 import static java.lang.Math.random;
 
 public class RepoImpl1 implements Repo{
