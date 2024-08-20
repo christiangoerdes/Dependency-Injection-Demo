@@ -1,8 +1,9 @@
 package org.example.app.service;
 
 import org.example.app.repo.RepoImpl1;
+import org.example.framework.annotations.AutoRegister;
 
-@org.example.framework.annotations.Service
+@AutoRegister(Service.class)
 public class ServiceImpl1 implements Service{
 
     RepoImpl1 repoImpl1;

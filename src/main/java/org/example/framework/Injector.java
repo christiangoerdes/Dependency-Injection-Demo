@@ -1,5 +1,8 @@
 package org.example.framework;
 
+import org.example.framework.annotations.AutoRegister;
+import org.reflections.Reflections;
+
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,13 +15,30 @@ public class Injector {
     private final Map<Class<?>, Class<?>> interfaceImplementations = new HashMap<>();
     private final Set<Class<?>> currentlyResolving = new HashSet<>();
 
+    public Injector() {
+        autoRegisterImplementations();
+    }
+
     // Registers a class with its instance
     public <T> void register(Class<T> interfaceType, T instance) {
         instances.put(interfaceType, instance);
     }
 
-    public <T, U extends T> void registerImplementation(Class<T> abstractType, Class<U> concreteType) {
+    public <T, U extends T> void registerImplementation(Class<?> abstractType, Class<?> concreteType) {
         interfaceImplementations.put(abstractType, concreteType);
+    }
+
+    private void autoRegisterImplementations() {
+        Reflections reflections = new Reflections("org.example");
+
+        Set<Class<?>> annotatedClasses = reflections.getTypesAnnotatedWith(AutoRegister.class);
+
+        for (Class<?> implClass : annotatedClasses) {
+            AutoRegister annotation = implClass.getAnnotation(AutoRegister.class);
+            for (Class<?> abstractType : annotation.value()) {
+                registerImplementation(abstractType, implClass);
+            }
+        }
     }
 
     // Resolves dependencies and returns an instance of the requested type
