@@ -2,11 +2,14 @@ package org.example.framework;
 
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class Injector {
 
     private final Map<Class<?>, Object> instances = new HashMap<>();
+    private final Set<Class<?>> currentlyResolving = new HashSet<>();
 
     // Registers a class with its instance
     public <T> void register(Class<T> interfaceType, T instance) {
@@ -20,7 +23,15 @@ public class Injector {
             return interfaceType.cast(instances.get(interfaceType));
         }
 
+        // Check for circular dependencies
+        if (currentlyResolving.contains(interfaceType)) {
+            throw new RuntimeException("Circular dependency detected: " + interfaceType.getName());
+        }
+
         try {
+            // Mark this type as currently being resolved
+            currentlyResolving.add(interfaceType);
+
             Constructor<?> constructor = getConstructorWithMaxParams(interfaceType);
 
             // Resolve dependencies recursively
@@ -38,6 +49,9 @@ public class Injector {
             return instance;
         } catch (Exception e) {
             throw new RuntimeException("Failed to resolve dependency: " + interfaceType.getName(), e);
+        } finally {
+            // Ensure we always remove the type from the currently resolving set
+            currentlyResolving.remove(interfaceType);
         }
     }
 
